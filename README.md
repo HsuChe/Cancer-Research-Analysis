@@ -2,12 +2,12 @@
 <br />
 <p align="center">
 
-  <h3 align="center">Stock Ticker Summary Table</h3>
+  <h3 align="center">Pymaceuticals Regiment Data Analysis</h3>
 
   <p align="center">
-     An explanation for the creation of a summary table from ticker information
+     Analyzing the effect of various regiments used to treat cancer.
     <br />
-    <a href="https://github.com/HsuChe/python-challenge"><strong>Project Github URL »</strong></a>
+    <a href="https://github.com/HsuChe/matplotlib_challenge"><strong>Project Github URL »</strong></a>
     <br />
     <br />
   </p>
@@ -18,285 +18,250 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-![hero image](https://github.com/HsuChe/python-challenge/blob/f3e0d54ab0d2365f8a35dd1a83ef981b05c49644/Image/PyBank_Hero.jpg)
+![hero image](https://github.com/HsuChe/matplotlib_challenge/blob/a25ee9a2ca6e4f6dd4c99a6167490a08182b8bba/Images/mouse-1708347_1920.jpg)
 
-Month to month analysis is critical to making operating decisions. For this homework, we are going to generate commonly used business metrics based on the monthly financial information.
+Testing the reduction is tumor growth is a great indicator for recovery from cancer. Analyzing the tumor growth reduction over time with various regiments will help us gauge the effectiveness of certain regiments.
 
 Features of the dataset:
-* The dataset is divided primarily between three sheets for each of the years that are being analyzed, starting with 2014 and ending in 2016.
+* The dataset is divided between two sets of data that is merged through the Mouuse ID.
 * The following are columns provided by the dataset: 
-    * Date: **The date that the information was generated**
-    * Profit/Loss: **The profit and loss from a month before**
+    * Mouse ID: **The unique identifier of the mouse**
+    * Drug Regimen: **Name of the drug regimen**
+    * Sex: **The sex of the mouse**
+    * Age_months: **The age of the mouse (month)**
+    * Weight (g): **The weight of the mouse in (grams)**
+    * Timepoint: **The checkpoints where new data was collected for a regimen**
+    * Tumor Volume (mm3): **The size of the tumor on the mouse**
+    * Metastatic Sites: **The metastatic information on the mouse from the source.**
 * The dataset is in the csv file format with delimiter of comma.
 
-* Download Dataset click [HERE](https://github.com/HsuChe/python-challenge/blob/f3e0d54ab0d2365f8a35dd1a83ef981b05c49644/PyBank/Resources/budget_data.csv)
+* Download 1st half of Dataset click [HERE](https://github.com/HsuChe/matplotlib_challenge/blob/a25ee9a2ca6e4f6dd4c99a6167490a08182b8bba/Pymaceuticals/data/Mouse_metadata.csv)
+* Download 1st half of Dataset click [HERE](https://github.com/HsuChe/matplotlib_challenge/blob/a25ee9a2ca6e4f6dd4c99a6167490a08182b8bba/Pymaceuticals/data/Study_results.csv)
 
-The homework is interested generating a few specific items for the summary table.
-
-* Total months accounted for in the dataset.
-* Aggregate change given the entire dataset.
-* Average change month to month.
-* Month with the greatest increase in profits.
-* Month with the greatest decrease in profits.
+The homework is interested generating a few specific items for the summary table for changes in tumor growth over various timepoints.
 
 <!-- GETTING STARTED -->
 ## Processing the csv and make it into a easier to use dataset.
 
-Open the csv with csv.reader() and using a for loop to iterate through each row and adding them to a list.
+Import the dependencies for the dataset
 
 * For loop to add to list
   ```sh
-  csv_list = []
-  for row in csv_read:
-    csv_list.append(row)
+  import metplotlib.pyplot as plt
+  import pandas as pd
   ```
 
-After generating the csv list, find the total number of months being accounted for. To do this, we will find the index of the rows.
+After importing the dependencies, go ahead and merge the first and the second half the of the data.
 
-* Finding the total month accounted for.
+* Merge the data
   ```sh
-  total_month = len(list)
+  mouse_metadata_path = "data/Mouse_metadata.csv"
+  study_results_path = "data/Study_results.csv"
+  mouse_metadata = pd.read_csv(mouse_metadata_path)
+  study_results = pd.read_csv(study_results_path)
+  mouse_metadata.head(),study_results.head()
+  merge_df = pd.merge(mouse_metadata,study_results, how = 'inner', on = 'Mouse ID')
   ```
 
-### Finding the total net profit/loss
+### finding specific information about mouse IDs to know how to clean the data.
 
-To find the totla net profit / loss, we will be using a loop that will iterate through each row in the data list and add up all of the values from loss/profit columns
+We can begin analyzing various aspects of mouse ID. First we tried to find the exact number of unique mice in the dataset.
+The two most important information for this dataset is the timepoint.
 
-* Total Profit Function:
+* See if there are any mouse with duplicate mouse ID and timepoint
   ```sh
-  def total_profit(list):
-    net = 0
-    for month in range(1,len(list)):
-        net = net + int(list[month][1])
-    return net  
+  df.loc[df.duplicated(subset = ['Mouse ID', 'Timepoint'], keep='last')]
   ```
 
-### Average month to month change.
+This will help us find out that specifically mouse ID g989 has duplicate mouse ID and timepoint.
 
-Next, we find the average change month to month. The difference between the months will be put into a list.
+Next we will remove the specific mouse ID from the dataset
 
-* Headers for generated columns
+* Removing the g989 Mouse ID
   ```sh
-  def month_change(list):
-    change_list = []
-    for month in range(1, len(list)-1):
-        current_price, next_price = int(list[month][1]), int(list[month + 1][1])
-        change = next_price - current_price
-        change_list.append(change)
-    return change_list
+  df_989_drop = df.loc[df['Mouse ID'] != need_to_drop['Mouse ID'].unique()[0]]
+  df_989_drop.reset_index(drop = True)
+  len(df_989_drop['Mouse ID'].unique())
   ```
 
-## Calculating the avearge change in profit / loss
+## Generating a DataFrame without the duplicates
 
-The average change in profit / loss is the sum of the change list divided by the length of the change list. 
+The next goal is to generate the dataframe without all the duplicated mouse ID and take the latest iteration of Timepoint from them. 
+
+This dataset is ordered from least to greatest so we can keep the higher Timepoint by taking the last iteration of the duplicate.
 
 * Avearge change in profit and losses month to month.  
     ```sh
-    def average_profit(change_list):
-            average_change = sum(change_list) / len(change_list)
-            average_change = round(average_change)
-        return average_change
+    df_dup_drop = df_989_drop.drop_duplicates('Mouse ID', keep = 'last')
+    df_dup_drop
     ```
 
-## Calculating the greatest increase and decrease in profit / loss month to month
+## Generating Summary Statistics
 
 The great increase and decrease is calculated by calculating the max and min of the change list and while referencing their index location to find the months that these changes happened. 
 
-* Finding the highest increase and decrease in profit / loss in the dataset.
+* Generating the summary statistics the conventional way, by creating the DataFrame from scratch.
   ```sh
-  def greatest_change(list):
-    change_list = month_change(list)
-    header_loc = 1
-    month_loc = 1
-    # find the highest and lowest monthly changes in the monnthly changes list
-    greatest_increase, greatest_decrease = max(change_list), min(change_list) 
-    # find the specific date that the highest and lowest monthly changes take place in.
-    gi_month = list[change_list.index(greatest_increase) + header_loc + month_loc][0]
-    gd_month = list[change_list.index(greatest_decrease) + header_loc + month_loc][0]
-    return gi_month, gd_month, greatest_increase, greatest_decrease
+  group_drug = df.groupby('Drug Regimen')
+  summary_mean = group_drug['Tumor Volume (mm3)'].mean().round(2)
+  summary_med = group_drug['Tumor Volume (mm3)'].median().round(2)
+  summary_var = group_drug['Tumor Volume (mm3)'].var().round(2)
+  summary_std = group_drug['Tumor Volume (mm3)'].std().round(2)
+  summary_sem = group_drug['Tumor Volume (mm3)'].sem().round(2)
+
+  summary_table = pd.DataFrame()
+  summary_table['Mean'] = summary_mean
+  summary_table['Med'] = summary_med
+  summary_table['Var'] = summary_var
+  summary_table['St Dev'] = summary_std
+  summary_table['St Err'] = summary_sem
   ```
 
-The fact that our opening price will be extracted after the current iteration of unique value is calculated, we would have to calculate the price change year on year as well as the percentage change before updating a new opening price from the conditional.
+Another way to generate the summary table is using the aggregate method.
 
 * Store Yearly Change and Yearly Percent Change to memory
   ```sh
-  YearlyChange = ClosingPrice - OpeningPrice
+  summary_table = group_drug.agg({'Tumor Volume (mm3)':['mean','median','var','std','sem']})
+  summary_table.columns = ['Mean', 'Med', 'Var', 'St Dev', 'St Err']
+  summary_table
   ```
 
-## Generate the summary table as a string.
+## Generating Bar and Pie Chart
 
 We for variables for each of the information we calculated before and map them into a string. 
 
-* Mapping the calculated value into the string. 
+* Create the bar chart showing the distribution of Regiment
   ``` sh
-  def summary_table(list):
-    # Define the variables that will be used inn the summary table f' string
-    total_month = len(list)
-    net = total_profit(list)
-    average_change = average_profit(month_change(list))
-    gi_month, gd_month, greatest_increase, greatest_decrease = greatest_change(list)
-    report = f'''
-    Financial Analysis
-    ----------------------------
-    Total Months: {total_month}
-    Total: {net}
-    Average Change: ${average_change}
-    Greatest Increase in Profits: "{gi_month} ({greatest_increase})"
-    Greatest Decrease in Profits: "{gd_month} ({greatest_decrease})"
-    '''
-    # return the string
-    return report
+  drug_id = df_dup_drop.groupby('Drug Regimen')['Mouse ID'].count()
+  drug_id.plot.bar(color = 'green', figsize=(15,5))
+  plt.xlabel('Drug Regiment')
+  plt.ylabel('Mouse Count')
+  plt.title('Mouse Count vs Regiment')
+  plt.show()
+    ```
+
+ * Creating the chart with plt instead of pandas
+    ```sh
+    gender_spread = df_dup_drop.groupby('Sex')['Mouse ID'].count()
+    gender_spread.plot.pie(figsize = (8,8),labels = ['Male','Female'],autopct='%1.1f%%', shadow = True, startangle = 90)
+    plt.xlabel('Mice Count')
+    plt.ylabel('Gender')
+    plt.title('Gender Mice Count')
+    plt.show()
   ```
 
-## Generating the text file and terminal message with the summary table.
-
-To generate the text file, we will be writing the string information into it.
-
-* Writing the information into a text file
-  ```sh
-  def analysis_gen(string, path):
-    with open (path,"w") as file1:
-            file1.write(string)
+ * Creating the chart with plt instead of pandas
+    ```sh
+    gender_spread = df_dup_drop.groupby('Sex')['Mouse ID'].count()
+    gender_spread.plot.pie(figsize = (8,8),labels = ['Male','Female'],autopct='%1.1f%%', shadow = True, startangle = 90)
+    plt.xlabel('Mice Count')
+    plt.ylabel('Gender')
+    plt.title('Gender Mice Count')
+    plt.show()
   ```
 
-## After everything is generated, we complete the PyBank portion of the assignment.
+   * Creating the chart with plt instead of pandas
+    ```sh
+    plt.figure(figsize = (8,8))
+    plt.pie(gender_spread, labels = gender_spread.index, autopct = "%1.1f%%", shadow= True, startangle = 90)
+    plt.xlabel('Mice Count')
+    plt.ylabel('Gender')
+    plt.title('Gender Mice Count')
+    plt.show()
+  ```
+
+## Quartiles, Outliers, and Boxplots
 
 <br>
 <br>
 <br>
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
-
-![hero image](https://github.com/HsuChe/python-challenge/blob/f3e0d54ab0d2365f8a35dd1a83ef981b05c49644/Image/PyPoll_Hero.jpg)
-
-Visualizing and processing voting data is how we can find our winner and calculate critical descriptions through analyzing polling data. 
-
-Features of the dataset:
-* Voter ID: **The unique ID that each vote is identified by**
-* County: **Name of the county where the vote was casted**
-* Candidate: **Name of the candidate the vote was casted for**
-
-* Download Dataset click [HERE](https://github.com/HsuChe/python-challenge/blob/f3e0d54ab0d2365f8a35dd1a83ef981b05c49644/PyPoll/Resources/election_data.csv)
-
-The homework is interested generating a few specific items for the summary table.
-
-* Total of votes casted
-* Percentage of the total vote each candidate received.
-* Winner of the election.
-
-<!-- GETTING STARTED -->
-## Processing the csv and make it into an dataset that is easier to manipulate.
-
-Open the csv with csv.reader() and using a for loop to iterate through each row and adding them to a list.
+We want a dataframe that has the tumor volume for the last iteration of timepoint. 
 
 * For loop to add to list
   ```sh
-  csv_list = []
-  for row in csv_read:
-    csv_list.append(row)
+  df_max_time = pd.DataFrame(df_dup_drop.groupby('Mouse ID')['Timepoint'].max()).reset_index()
+
+  df_time = pd.merge(df_max_time,df_dup_drop,on=['Mouse ID','Timepoint'])]
   ```
 
 After generating the csvlist, find the total number of votes being accounted for. To do this, we will find the index of the rows.
 
-* Finding the total votes accounted for.
+* Function to find the box and whiskers graph and outliers
   ```sh
-  total_vote = len(list)
+  def boxplot_drugs(drug_list):
+    drug_df = pd.DataFrame()
+    for drugs in drug_list:
+        tumor_vol = df_time.loc[df_time['Drug Regimen'] == drugs]['Tumor Volume (mm3)']
+        drug_df[drugs] = tumor_vol.reset_index(drop=True)
+
+        # Calculate the IQR and quantitatively determine if there are any potential outliers. 
+
+        # Locate the rows which contain mice on each drug and get the tumor volumes
+        quartiles = tumor_vol.reset_index(drop=True).quantile([.25,.5,.75])
+        # add subset 
+        lowerq = quartiles[0.25]
+        upperq = quartiles[0.75]
+        iqr = upperq-lowerq
+        # Determine outliers using upper and lower bounds
+        lower_bound = quartiles[0.25] - (1.5*iqr)
+        upper_bound = quartiles[0.75] + (1.5*iqr)
+        print(f"Upper/Lower Bound: {drugs}")
+        print(f"Values below {lower_bound.round(2)} could be outliers.")
+        print(f"Values above {upper_bound.round(2)} could be outliers.")
+            
+    return drug_df
+
+
+  drug_df = boxplot_drugs(drug_list)
   ```
 
-### Find information for each candidate
+## Line and Scatter Plots
 
-## Preprocessing information and putting them into a dictionary.
+To plot effectiveness for each regiment and its effect on the weight of the mouse.
 
-To find the specific information for each candidate, the first step is to find the list of unique candidates, to do this, we can generate a list and append each name into a list when a new iteration appears.
-
-* Unique candidate function:
+* plotting a line graph for changes in tumor size over Time Point:
   ```sh
-  def UniqueCandidate(datalist):
-    UniqueList = []
-    for vote in range(1, len(datalist)):
-        if datalist[vote][2] not in UniqueList:
-            UniqueList.append(datalist[vote][2])
-    return UniqueList
+  mouse_name = df_time.loc[df_time['Drug Regimen'] == 'Capomulin']['Mouse ID'].iloc[0]
+  mouse_info = merge_df.loc[merge_df['Mouse ID'] == mouse_name][['Timepoint','Tumor Volume (mm3)']]
+  mouse_info.index = mouse_info['Timepoint']
+  mouse_info['Tumor Volume (mm3)'].plot.line(figsize = (10,6))
+  plt.xlabel('Time Point (Days)')
+  plt.ylabel('Tumor Size (mm^3)')
+  plt.title(f'My Mouse "{mouse_name}" Will Live')
   ```
 
-### Finding out the amount of votes each candidate received.
+## Regression and Correlation
 
-We can find out the amount of votes each candidate received based on unique candidate names.
+Finding the information on the effectiveness of regimen against size. 
 
-* Candidate vote counter:
+* Scatter plot for Timepoint against Tumor Size:
   ```sh
-  def CandidateCounter(candidate, datalist):
-    CandidateCount = 0
-    for vote in datalist:
-        if vote[2] == candidate:
-            CandidateCount += 1
-    return CandidateCount
+  from scipy.stats import linregress
+
+  x_axis = mouse_vol_weight['Weight (g)']
+  y_axis = mouse_vol_weight['Tumor Volume (mm3)']
+  (slope, intercept, rvalue, pvalue, stderr) = linregress(x_axis, y_axis)
+  y_values = slope*x_axis+intercept
+  print(f"regression function: f(x) = {slope.round(2)}x + {intercept.round(2)}")
+  plt.figure(figsize=(10,7))
+  plt.plot(x_axis, y_values)
+  plt.scatter(x_axis, y_axis)
+  plt.xlabel('Weight (g)')
+  plt.ylabel('Tumor Size (mm^3)')
+  plt.title('Effect of Capomulin on Weight')
+  plt.show()
   ```
 
-## Find the winner and total votes. 
+## Conclusion
 
-To find the winner, we will iterate through each candidate within unique candidate information and then find the name through index of the maximum vote count. To do this, we will first create a dictionary with unique candidate names and add voting information based on candidates to the dictionary. 
+### 1. 
+#### The dataset has a nice spread in terms of giving an even amount of regiment to each mouse. There are no real statistical bias in terms of the distribution of regiments
 
-* Generating and adding candidate voting information to dictionary
-    ```sh
-    CandidateInfo = {}
-    for candidate in UniqueCandidate(datalist):
-        CandidateCount = CandidateCounter(candidate,datalist)
-        PercentVote = (CandidateCount/totalvote)*100
-        StringConvert = "%.3f" % PercentVote + "%"
-        CandidateInfo[candidate] = [CandidateCount,StringConvert]
-    ```
+### 2. 
+#### The dataset has a nice spread for gender of the mouse, there are no significant bias between the male and female population in the data.
 
-* Comparing candidate vote count to find the winner  
-    ```sh
-    def winner(CandidateDict):
-        winner = ''
-        winning_vote = 0
-        for candidate in CandidateDict:
-            if CandidateDict[candidate][0] > winning_vote:
-                winning_vote = CandidateDict[candidate][0]
-                winner = candidate
-        return winner
-    ```
-* Putting the rest of the information into the dictionary. 
-    ```sh
-    CandidateInfo['Winner'] = winner(CandidateInfo)
-    CandidateInfo['Total'] = totalvote
-    ```
+### 3. 
+#### Based on the bar and whisker graph, the regiment Capomulin and Ramicane seems to be the more effective regiment as the tumor volume seems to be the lowest on the last time point. However, the drugs Infubinol and Ceftamin are more consistant as their outliers are closer to the lower and higher quantiles. 
 
-## Generate the summary table as a string.
-
-We for variables for each of the information we calculated before and map them into a string. 
-
-* Mapping the calculated value into the string. 
-  ``` sh
-  def parser(CandidateDict):
-    string = f'''
-        Election Results
-        -------------------------
-        Total Votes: {CandidateDict['Total']}
-        -------------------------
-        Khan: {CandidateDict['Khan'][1]} ({CandidateDict['Khan'][0]})
-        Correy: {CandidateDict['Correy'][1]} ({CandidateDict['Correy'][0]})
-        Li: {CandidateDict['Li'][1]} ({CandidateDict['Li'][0]})
-        O'Tooley: {CandidateDict["O'Tooley"][1]} ({CandidateDict["O'Tooley"][0]})
-        -------------------------
-        Winner: {CandidateDict['Winner']}
-        -------------------------
-        '''
-    return string
-  ```
-
-## Generating the text file and terminal message with the summary table.
-
-To generate the text file, we will be writing the string information into it.
-
-* Writing the information into a text file
-  ```sh
-  def analysis_gen(string, path):
-    with open (path,"w") as file1:
-            file1.write(string)
-  ```
-
-## After everything is generated, we complete the PyPoll portion of the assignment.
+#### Infubinol and Ceftamin should yield more consistant results and if those drugs are more effective past 45 time point, then they might be better drugs than Capomulin and Ramicane.
